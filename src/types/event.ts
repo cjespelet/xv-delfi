@@ -45,6 +45,15 @@ export interface EventData {
     yes: string;
     no: string;
     count: string;
+    dietQuestion: string;
+    dietQuestionOther: string;
+    dietYou: string;
+    dietPerson: string;
+    dietOtherName: string;
+    dietOtherPlaceholder: string;
+    dietNote: string;
+    dietMissingName: string;
+    dietOptions: string[];
     phrase: string;
     submit: string;
     thanks: string;

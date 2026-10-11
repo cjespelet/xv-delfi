@@ -1,11 +1,30 @@
 import { initDiscoBalls } from './disco-balls';
 import { initPlaylist } from './playlist';
 
+type GuestDiet = { name: string; diet: string[]; note: string };
+
+function dietOptions(box: HTMLElement): string[] {
+  return (box.dataset.options ?? 'Ninguna').split('|').map((item) => item.trim()).filter(Boolean);
+}
+
+function formatAlimentacion(name: string, guests: GuestDiet[]): string {
+  return guests
+    .map((guest, index) => {
+      const who = index === 0 ? name : guest.name.trim();
+      const extras = guest.diet.filter((item) => item !== 'Ninguna');
+      const diet = extras.length ? extras.join(', ') : 'Ninguna';
+      const note = extras.length && guest.note.trim() ? `. Detalle: ${guest.note.trim()}` : '';
+      return `Persona ${index + 1} (${who}): ${diet}${note}`;
+    })
+    .join('\n');
+}
+
 async function submitRsvp(
   form: HTMLFormElement,
   thanks: HTMLElement,
   error: HTMLElement | null,
   sendError: string,
+  guests: GuestDiet[],
 ): Promise<void> {
   const data = new FormData(form);
   const name = String(data.get('name') ?? '').trim();
@@ -17,6 +36,19 @@ async function submitRsvp(
     }
     return;
   }
+
+  const box = document.getElementById('rsvp-guests');
+  if (coming === 'si' && box) {
+    const missing = guests.findIndex((guest, index) => index > 0 && !guest.name.trim());
+    if (missing > -1) {
+      if (error) {
+        error.textContent = `${box.dataset.missingName ?? 'Falta el nombre de la persona'} ${missing + 1}.`;
+        error.classList.remove('hidden');
+      }
+      document.getElementById(`g${missing + 1}-name`)?.focus();
+      return;
+    }
+  }
   error?.classList.add('hidden');
 
   const email = form.dataset.email?.trim();
@@ -25,6 +57,8 @@ async function submitRsvp(
 
   if (email) {
     try {
+      const attending = coming === 'si';
+      const party = attending ? guests : [];
       const res = await fetch(`https://formsubmit.co/ajax/${encodeURIComponent(email)}`, {
         method: 'POST',
         headers: {
@@ -33,8 +67,9 @@ async function submitRsvp(
         },
         body: JSON.stringify({
           nombre: name,
-          viene: coming === 'si' ? 'Sí, va' : 'No puede ir',
-          cuantos: String(data.get('count') ?? '1'),
+          viene: attending ? 'Sí, va' : 'No puede ir',
+          cuantos: attending ? String(party.length || data.get('count') || '1') : '0',
+          alimentacion: attending ? formatAlimentacion(name, party) : '(no asiste)',
           frase: String(data.get('phrase') ?? '').trim() || '(sin frase)',
           _subject: `RSVP XV — ${name}`,
           _template: 'table',
@@ -138,24 +173,142 @@ function initRsvp(): void {
   const form = document.getElementById('rsvp-form');
   const thanks = document.getElementById('rsvp-thanks');
   const error = document.getElementById('rsvp-error');
+  const yesBox = document.getElementById('rsvp-yes');
+  const guestsBox = document.getElementById('rsvp-guests');
+  const countSelect = document.getElementById('rsvp-count');
   if (!(form instanceof HTMLFormElement) || !thanks) return;
   const sendError = form.dataset.sendError ?? 'No se pudo enviar.';
 
-  form.addEventListener('submit', (event) => {
-    event.preventDefault();
-    void submitRsvp(form, thanks, error, sendError);
+  let guests: GuestDiet[] = [{ name: '', diet: ['Ninguna'], note: '' }];
+
+  const renderGuests = () => {
+    if (!guestsBox) return;
+    const options = dietOptions(guestsBox);
+    const person = guestsBox.dataset.person ?? 'Persona';
+    guestsBox.replaceChildren();
+
+    guests.forEach((guest, index) => {
+      const n = index + 1;
+      const wrap = document.createElement('div');
+      wrap.className = 'rsvp-guest';
+
+      const title = document.createElement('p');
+      title.className = 'rsvp-guest-title';
+      title.textContent = `${person} ${n}`;
+      if (index === 0) {
+        const tag = document.createElement('span');
+        tag.textContent = guestsBox.dataset.you ?? ' · vos';
+        title.appendChild(tag);
+      }
+      wrap.appendChild(title);
+
+      if (index > 0) {
+        const nameLabel = document.createElement('label');
+        nameLabel.className = 'block';
+        const nameHint = document.createElement('span');
+        nameHint.className = 'eyebrow';
+        nameHint.textContent = guestsBox.dataset.otherName ?? 'Nombre y apellido';
+        const nameInput = document.createElement('input');
+        nameInput.className = 'field mt-2';
+        nameInput.type = 'text';
+        nameInput.id = `g${n}-name`;
+        nameInput.maxLength = 80;
+        nameInput.placeholder = `${guestsBox.dataset.otherPlaceholder ?? 'Nombre de la persona'} ${n}`;
+        nameInput.value = guest.name;
+        nameInput.addEventListener('input', () => {
+          guest.name = nameInput.value;
+        });
+        nameLabel.append(nameHint, nameInput);
+        wrap.appendChild(nameLabel);
+      }
+
+      const fieldset = document.createElement('fieldset');
+      const legend = document.createElement('span');
+      legend.className = 'eyebrow';
+      legend.id = `g${n}-lg`;
+      legend.textContent =
+        index === 0
+          ? (guestsBox.dataset.question ?? '¿Tenés alguna restricción alimentaria?')
+          : (guestsBox.dataset.questionOther ?? 'Restricción alimentaria');
+
+      const choices = document.createElement('div');
+      choices.className = 'rsvp-choices';
+      choices.setAttribute('aria-labelledby', legend.id);
+
+      const note = document.createElement('textarea');
+      note.className = 'field min-h-20 resize-none';
+      note.id = `g${n}-note`;
+      note.maxLength = 200;
+      note.placeholder = guestsBox.dataset.note ?? '';
+      note.value = guest.note;
+      note.hidden = !guest.diet.some((item) => item !== 'Ninguna');
+      note.addEventListener('input', () => {
+        guest.note = note.value;
+      });
+
+      const boxes: HTMLInputElement[] = [];
+      options.forEach((option, optionIndex) => {
+        const label = document.createElement('label');
+        label.className = 'rsvp-choice';
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.id = `g${n}-d${optionIndex}`;
+        checkbox.value = option;
+        checkbox.checked = guest.diet.includes(option);
+        const text = document.createElement('span');
+        text.textContent = option;
+        label.append(checkbox, text);
+        choices.appendChild(label);
+        boxes.push(checkbox);
+        checkbox.addEventListener('change', () => {
+          if (option === 'Ninguna' && checkbox.checked) {
+            boxes.forEach((other) => {
+              if (other !== checkbox) other.checked = false;
+            });
+          }
+          if (option !== 'Ninguna' && checkbox.checked) boxes[0].checked = false;
+          if (!boxes.some((item) => item.checked)) boxes[0].checked = true;
+          guest.diet = boxes.filter((item) => item.checked).map((item) => item.value);
+          note.hidden = !guest.diet.some((item) => item !== 'Ninguna');
+        });
+      });
+
+      fieldset.append(legend, choices, note);
+      wrap.appendChild(fieldset);
+      guestsBox.appendChild(wrap);
+    });
+  };
+
+  const syncComing = () => {
+    const attending = form.querySelector<HTMLInputElement>('input[name="coming"]:checked')?.value === 'si';
+    form.querySelectorAll('input[name="coming"]').forEach((el) => {
+      el.parentElement?.classList.toggle('is-on', el instanceof HTMLInputElement && el.checked);
+    });
+    if (yesBox) {
+      yesBox.hidden = !attending;
+      yesBox.classList.toggle('hidden', !attending);
+    }
+  };
+
+  countSelect?.addEventListener('change', () => {
+    const qty = Number(countSelect instanceof HTMLSelectElement ? countSelect.value : 1);
+    const none = dietOptions(guestsBox ?? document.createElement('div'))[0] ?? 'Ninguna';
+    while (guests.length < qty) guests.push({ name: '', diet: [none], note: '' });
+    guests = guests.slice(0, qty);
+    renderGuests();
   });
 
   form.querySelectorAll('input[name="coming"]').forEach((input) => {
-    input.addEventListener('change', () => {
-      form.querySelectorAll('input[name="coming"]').forEach((el) => {
-        el.parentElement?.classList.remove('is-on');
-      });
-      if (input instanceof HTMLInputElement && input.checked) {
-        input.parentElement?.classList.add('is-on');
-      }
-    });
+    input.addEventListener('change', syncComing);
   });
+
+  form.addEventListener('submit', (event) => {
+    event.preventDefault();
+    void submitRsvp(form, thanks, error, sendError, guests);
+  });
+
+  renderGuests();
+  syncComing();
 }
 
 initReveal();

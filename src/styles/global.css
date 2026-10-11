@@ -129,6 +129,90 @@
   .on-ink .muted {
     @apply text-silver;
   }
+
+  .rsvp-guests {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .rsvp-guest {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    padding: 20px 18px;
+    border-radius: 18px;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    background: rgba(255, 255, 255, 0.06);
+  }
+
+  .rsvp-guest-title {
+    margin: 0;
+    font-family: var(--font-script);
+    font-size: 1.7rem;
+    line-height: 1.1;
+    color: #fff;
+  }
+
+  .rsvp-guest-title span {
+    font-style: italic;
+    color: #c8c8c8;
+  }
+
+  .rsvp-guest fieldset {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin: 0;
+    padding: 0;
+    border: 0;
+  }
+
+  .rsvp-choices {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .rsvp-choice {
+    position: relative;
+  }
+
+  .rsvp-choice input {
+    position: absolute;
+    inset: 0;
+    margin: 0;
+    opacity: 0;
+    cursor: pointer;
+  }
+
+  .rsvp-choice span {
+    display: inline-flex;
+    align-items: center;
+    min-height: 42px;
+    padding: 0 15px;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    font-size: 0.875rem;
+    color: #f2f2f2;
+    transition: background 0.15s, color 0.15s, border-color 0.15s;
+  }
+
+  .rsvp-choice input:checked + span {
+    background: #f4f2ef;
+    border-color: #f4f2ef;
+    color: #1a1a1a;
+    font-weight: 500;
+  }
+
+  .rsvp-choice input:focus-visible + span {
+    outline: 2px solid #c8c8c8;
+    outline-offset: 2px;
+  }
+
+  .rsvp-guest .field {
+    background: rgba(0, 0, 0, 0.25);
+  }
 }
 
 .pl-row {

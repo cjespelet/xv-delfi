@@ -5,6 +5,7 @@ import Sparkles from './Sparkles.astro';
 
 interface Props { data: EventData; }
 const { data } = Astro.props;
+const diet = data.rsvp;
 ---
 
 <section id="confirmar" class="on-ink relative overflow-hidden section-pad reveal text-center" aria-labelledby="rsvp-title">
@@ -41,19 +42,35 @@ const { data } = Astro.props;
       </div>
     </fieldset>
 
-    <label class="block">
-      <span class="eyebrow">{data.rsvp.count}</span>
-      <select class="field mt-2" name="count">
-        <option value="1">Solo yo</option>
-        <option value="2">2</option>
-        <option value="3">3</option>
-        <option value="4">4</option>
-        <option value="5">5</option>
-        <option value="6">6</option>
-        <option value="7">7</option>
-        <option value="8">8</option>
-      </select>
-    </label>
+    <div id="rsvp-yes" class="hidden space-y-8" hidden>
+      <label class="block">
+        <span class="eyebrow">{data.rsvp.count}</span>
+        <select class="field mt-2" name="count" id="rsvp-count">
+          <option value="1">Solo yo</option>
+          <option value="2">2 personas</option>
+          <option value="3">3 personas</option>
+          <option value="4">4 personas</option>
+          <option value="5">5 personas</option>
+          <option value="6">6 personas</option>
+          <option value="7">7 personas</option>
+          <option value="8">8 personas</option>
+        </select>
+      </label>
+
+      <div
+        id="rsvp-guests"
+        class="rsvp-guests"
+        data-person={diet.dietPerson}
+        data-you={diet.dietYou}
+        data-question={diet.dietQuestion}
+        data-question-other={diet.dietQuestionOther}
+        data-other-name={diet.dietOtherName}
+        data-other-placeholder={diet.dietOtherPlaceholder}
+        data-note={diet.dietNote}
+        data-missing-name={diet.dietMissingName}
+        data-options={diet.dietOptions.join('|')}
+      ></div>
+    </div>
 
     <label class="block">
       <span class="sr-only">{data.rsvp.phrase}</span>
