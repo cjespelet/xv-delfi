@@ -21,23 +21,56 @@ function saveAsked(ids: Set<string>): void {
   localStorage.setItem(ASKED_KEY, JSON.stringify([...ids]));
 }
 
-async function searchItunes(query: string): Promise<Track[]> {
-  const url = new URL('https://itunes.apple.com/search');
-  url.searchParams.set('term', query);
-  url.searchParams.set('media', 'music');
-  url.searchParams.set('entity', 'song');
-  url.searchParams.set('limit', '6');
-  url.searchParams.set('country', 'AR');
-  const res = await fetch(url);
-  const data = (await res.json()) as {
-    results?: { trackId: number; trackName: string; artistName: string; artworkUrl100?: string }[];
-  };
-  return (data.results ?? []).map((item) => ({
+type ItunesSong = {
+  trackId: number;
+  trackName: string;
+  artistName: string;
+  artworkUrl100?: string;
+};
+
+function mapItunes(results: ItunesSong[] | undefined): Track[] {
+  return (results ?? []).map((item) => ({
     id: String(item.trackId),
     name: item.trackName,
     artists: item.artistName,
     image: (item.artworkUrl100 ?? '').replace('100x100', '200x200'),
   }));
+}
+
+function searchItunes(query: string): Promise<Track[]> {
+  return new Promise((resolve, reject) => {
+    const cb = `__itunes${Date.now()}${Math.floor(Math.random() * 1e5)}`;
+    const script = document.createElement('script');
+    const url = new URL('https://itunes.apple.com/search');
+    url.searchParams.set('term', query);
+    url.searchParams.set('media', 'music');
+    url.searchParams.set('entity', 'song');
+    url.searchParams.set('limit', '6');
+    url.searchParams.set('country', 'AR');
+    url.searchParams.set('callback', cb);
+
+    const win = window as unknown as Record<string, unknown>;
+    const cleanup = () => {
+      script.remove();
+      delete win[cb];
+      window.clearTimeout(timer);
+    };
+    const timer = window.setTimeout(() => {
+      cleanup();
+      reject(new Error('timeout'));
+    }, 8000);
+
+    win[cb] = (data: { results?: ItunesSong[] }) => {
+      cleanup();
+      resolve(mapItunes(data.results));
+    };
+    script.onerror = () => {
+      cleanup();
+      reject(new Error('itunes'));
+    };
+    script.src = url.toString();
+    document.head.append(script);
+  });
 }
 
 async function searchSpotify(api: string, query: string): Promise<Track[]> {
