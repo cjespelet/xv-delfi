@@ -13,26 +13,59 @@ export function heroDateParts(iso: string): { dow: string; day: string; month: s
   };
 }
 
+const TZ = 'America/Argentina/Buenos_Aires';
+
+function pad(n: number): string {
+  return String(n).padStart(2, '0');
+}
+
+/** Wall-clock parts from an offset ISO like 2026-11-07T21:00:00-03:00 */
+function localParts(iso: string): { y: number; mo: number; d: number; h: number; mi: number } {
+  const m = iso.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/);
+  if (!m) {
+    const dt = new Date(iso);
+    return { y: dt.getFullYear(), mo: dt.getMonth() + 1, d: dt.getDate(), h: dt.getHours(), mi: dt.getMinutes() };
+  }
+  return { y: Number(m[1]), mo: Number(m[2]), d: Number(m[3]), h: Number(m[4]), mi: Number(m[5]) };
+}
+
+function addHours(p: ReturnType<typeof localParts>, hours: number): ReturnType<typeof localParts> {
+  const dt = new Date(p.y, p.mo - 1, p.d, p.h + hours, p.mi);
+  return { y: dt.getFullYear(), mo: dt.getMonth() + 1, d: dt.getDate(), h: dt.getHours(), mi: dt.getMinutes() };
+}
+
+function localStamp(p: ReturnType<typeof localParts>): string {
+  return `${p.y}${pad(p.mo)}${pad(p.d)}T${pad(p.h)}${pad(p.mi)}00`;
+}
+
+function utcStamp(d: Date): string {
+  return d.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
+}
+
+function escapeIcs(value: string): string {
+  return value.replace(/\\/g, '\\\\').replace(/\n/g, '\\n').replace(/,/g, '\\,').replace(/;/g, '\\;');
+}
+
 export function googleCalendarUrl(
   title: string,
   startIso: string,
   location: string,
   details: string,
 ): string {
-  const start = new Date(startIso);
-  const end = new Date(start.getTime() + 5 * 60 * 60 * 1000);
-  const fmt = (d: Date) => d.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
+  const start = localParts(startIso);
+  const end = addHours(start, 5);
   const params = new URLSearchParams({
     action: 'TEMPLATE',
     text: title,
-    dates: `${fmt(start)}/${fmt(end)}`,
+    dates: `${localStamp(start)}/${localStamp(end)}`,
     details,
     location,
+    ctz: TZ,
   });
   return `https://calendar.google.com/calendar/render?${params.toString()}`;
 }
 
-export function appleCalendarUrl(
+export function buildIcs(
   title: string,
   startIso: string,
   location: string,
@@ -40,19 +73,22 @@ export function appleCalendarUrl(
 ): string {
   const start = new Date(startIso);
   const end = new Date(start.getTime() + 5 * 60 * 60 * 1000);
-  const stamp = (d: Date) =>
-    d.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
-  const ics = [
+  const lines = [
     'BEGIN:VCALENDAR',
     'VERSION:2.0',
+    'PRODID:-//Mis XV//Invitacion//ES',
+    'CALSCALE:GREGORIAN',
+    'METHOD:PUBLISH',
     'BEGIN:VEVENT',
-    `DTSTART:${stamp(start)}`,
-    `DTEND:${stamp(end)}`,
-    `SUMMARY:${title}`,
-    `DESCRIPTION:${details}`,
-    `LOCATION:${location}`,
+    `UID:xv-${utcStamp(start)}@cjespelet.github.io`,
+    `DTSTAMP:${utcStamp(new Date())}`,
+    `DTSTART:${utcStamp(start)}`,
+    `DTEND:${utcStamp(end)}`,
+    `SUMMARY:${escapeIcs(title)}`,
+    `DESCRIPTION:${escapeIcs(details)}`,
+    `LOCATION:${escapeIcs(location)}`,
     'END:VEVENT',
     'END:VCALENDAR',
-  ].join('\n');
-  return `data:text/calendar;charset=utf-8,${encodeURIComponent(ics)}`;
+  ];
+  return `${lines.join('\r\n')}\r\n`;
 }
