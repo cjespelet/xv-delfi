@@ -67,8 +67,23 @@ const owner = created.data.owner?.login || cred.username;
 console.log(created.status === 422 ? `Repo already exists: ${owner}/${REPO}` : `Created ${owner}/${REPO}`);
 
 const dest = mkdtempSync(join(tmpdir(), 'xv-delfi-'));
+const extraHeader = `AUTHORIZATION: basic ${Buffer.from(`${cred.username}:${cred.password}`).toString('base64')}`;
+const gitEnv = { ...process.env, GIT_TERMINAL_PROMPT: '0' };
+const git = (args, opts = {}) =>
+  execSync(`git ${args}`, { cwd: dest, stdio: 'inherit', env: gitEnv, ...opts });
+
+if (created.status === 422) {
+  execSync(`git -c http.extraheader="${extraHeader}" clone --depth 1 https://github.com/${owner}/${REPO}.git "${dest}"`, {
+    stdio: 'inherit',
+    env: gitEnv,
+  });
+} else {
+  git('init -b main');
+  execSync(`git remote add origin https://github.com/${owner}/${REPO}.git`, { cwd: dest });
+}
+
 try {
-  execSync(`robocopy "${SRC}" "${dest}" /E /XD node_modules dist .astro .wrangler /XF .env .env.production /NFL /NDL /NJH /NJS /NP`, {
+  execSync(`robocopy "${SRC}" "${dest}" /E /XD .git node_modules dist .astro .wrangler /XF .env .env.production /NFL /NDL /NJH /NJS /NP`, {
     stdio: 'ignore',
   });
 } catch (err) {
@@ -84,14 +99,16 @@ if (!existsSync(join(dest, 'package.json'))) {
   process.exit(1);
 }
 
-const git = (args) => execSync(`git ${args}`, { cwd: dest, stdio: 'inherit' });
-git('init -b main');
 git('add -A');
-git('commit -m "Publish the XV invitation on its own GitHub Pages site."');
-execSync(`git remote add origin https://github.com/${owner}/${REPO}.git`, { cwd: dest });
-execSync(`git -c http.extraheader="AUTHORIZATION: basic ${Buffer.from(`${cred.username}:${cred.password}`).toString('base64')}" push -u origin main`, {
+try {
+  git('commit -m "Publish the XV invitation on its own GitHub Pages site."');
+} catch {
+  console.log('No file changes to publish');
+}
+execSync(`git -c http.extraheader="${extraHeader}" push -u origin main`, {
   cwd: dest,
   stdio: 'inherit',
+  env: gitEnv,
 });
 
 const pages = await gh(`/repos/${owner}/${REPO}/pages`, {
