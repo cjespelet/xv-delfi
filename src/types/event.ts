@@ -38,6 +38,7 @@ export interface EventData {
   };
   rsvp: {
     email: string;
+    whatsapp: string;
     title: string;
     subtitle: string;
     name: string;

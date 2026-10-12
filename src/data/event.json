@@ -65,6 +65,7 @@
   },
   "rsvp": {
     "email": "cjespelet@gmail.com",
+    "whatsapp": "5492494243613",
     "title": "¿Nos acompañás?",
     "subtitle": "Confirmá tu asistencia hasta el 28 de octubre.",
     "name": "Tu nombre y apellido",
@@ -82,8 +83,8 @@
     "dietMissingName": "Falta el nombre de la persona",
     "dietOptions": ["Ninguna", "Vegetariano", "Vegano", "Celíaco / sin TACC", "Sin lactosa", "Otra"],
     "phrase": "Una palabra o frase para ella (opcional)",
-    "submit": "Confirmar asistencia",
-    "thanks": "¡Gracias! Ya tenemos tu respuesta.",
+    "submit": "Confirmar por WhatsApp",
+    "thanks": "¡Gracias! Enviá el mensaje en WhatsApp para que quede confirmado.",
     "required": "Completá tu nombre y si venís.",
     "sendError": "No se pudo enviar. Probá de nuevo en un momento.",
     "activateHint": "Revisá el mail (también spam) y tocá el link «Activate Form». Después volvé a confirmar."

@@ -19,13 +19,40 @@ function formatAlimentacion(name: string, guests: GuestDiet[]): string {
     .join('\n');
 }
 
-async function submitRsvp(
+function digitsPhone(raw: string): string {
+  return raw.replace(/\D/g, '');
+}
+
+function rsvpWhatsAppText(
+  honoree: string,
+  name: string,
+  attending: boolean,
+  count: string,
+  guests: GuestDiet[],
+  phrase: string,
+): string {
+  const lines = [
+    `RSVP XV ${honoree}`,
+    '',
+    `Nombre: ${name}`,
+    `Viene: ${attending ? 'Sí, va' : 'No puede ir'}`,
+  ];
+  if (attending) {
+    lines.push(`Cuántos: ${count}`);
+    lines.push('Alimentación:');
+    lines.push(formatAlimentacion(name, guests));
+  }
+  lines.push(`Frase: ${phrase || '(sin frase)'}`);
+  return lines.join('\n');
+}
+
+function submitRsvp(
   form: HTMLFormElement,
   thanks: HTMLElement,
   error: HTMLElement | null,
   sendError: string,
   guests: GuestDiet[],
-): Promise<void> {
+): void {
   const data = new FormData(form);
   const name = String(data.get('name') ?? '').trim();
   const coming = String(data.get('coming') ?? '');
@@ -49,49 +76,28 @@ async function submitRsvp(
       return;
     }
   }
+
+  const phone = digitsPhone(form.dataset.whatsapp ?? '');
+  if (!phone) {
+    if (error) {
+      error.textContent = sendError;
+      error.classList.remove('hidden');
+    }
+    return;
+  }
   error?.classList.add('hidden');
 
-  const email = form.dataset.email?.trim();
-  const submitBtn = form.querySelector<HTMLButtonElement>('[type="submit"]');
-  if (submitBtn) submitBtn.disabled = true;
+  const attending = coming === 'si';
+  const party = attending ? guests : [];
+  const count = attending ? String(party.length || data.get('count') || '1') : '0';
+  const phrase = String(data.get('phrase') ?? '').trim();
+  const honoree = form.dataset.honoree?.trim() || 'Delfi';
+  const url = `https://wa.me/${phone}?text=${encodeURIComponent(
+    rsvpWhatsAppText(honoree, name, attending, count, party, phrase),
+  )}`;
 
-  if (email) {
-    try {
-      const attending = coming === 'si';
-      const party = attending ? guests : [];
-      const res = await fetch(`https://formsubmit.co/ajax/${encodeURIComponent(email)}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Accept: 'application/json',
-        },
-        body: JSON.stringify({
-          nombre: name,
-          viene: attending ? 'Sí, va' : 'No puede ir',
-          cuantos: attending ? String(party.length || data.get('count') || '1') : '0',
-          alimentacion: attending ? formatAlimentacion(name, party) : '(no asiste)',
-          frase: String(data.get('phrase') ?? '').trim() || '(sin frase)',
-          _subject: `RSVP XV — ${name}`,
-          _template: 'table',
-          _captcha: 'false',
-        }),
-      });
-      const payload = (await res.json()) as { success?: string | boolean; message?: string };
-      const sent = payload.success === true || payload.success === 'true';
-      if (!sent) {
-        const activating = /activat/i.test(payload.message ?? '');
-        throw new Error(activating ? 'activate' : 'send');
-      }
-    } catch (err) {
-      if (error) {
-        const activateHint = form.dataset.activateHint ?? sendError;
-        error.textContent = err instanceof Error && err.message === 'activate' ? activateHint : sendError;
-        error.classList.remove('hidden');
-      }
-      if (submitBtn) submitBtn.disabled = false;
-      return;
-    }
-  }
+  const opened = window.open(url, '_blank', 'noopener');
+  if (!opened) window.location.assign(url);
 
   form.classList.add('hidden');
   thanks.classList.remove('hidden');
@@ -304,7 +310,7 @@ function initRsvp(): void {
 
   form.addEventListener('submit', (event) => {
     event.preventDefault();
-    void submitRsvp(form, thanks, error, sendError, guests);
+    submitRsvp(form, thanks, error, sendError, guests);
   });
 
   renderGuests();
