@@ -3,14 +3,19 @@ interface Props { compact?: boolean; }
 const { compact = false } = Astro.props;
 
 const heroBalls = [
-  { hang: 'a', size: 92, seed: 3, string: 72 },
-  { hang: 'c', size: 46, seed: 11, string: 22 },
-  { hang: 'b', size: 72, seed: 7, string: 36 },
+  { left: '10%', size: 72, seed: 3, string: 28, z: 2, sway: '8.4s', delay: '-1.2s' },
+  { left: '26%', size: 118, seed: 7, string: 14, z: 4, sway: '7.2s', delay: '0s' },
+  { left: '40%', size: 46, seed: 11, string: 8, z: 5, sway: '6.4s', delay: '-3.1s' },
+  { left: '52%', size: 88, seed: 17, string: 42, z: 3, sway: '9.1s', delay: '-4.4s' },
+  { left: '68%', size: 64, seed: 19, string: 18, z: 4, sway: '7.8s', delay: '-2s' },
+  { left: '84%', size: 96, seed: 23, string: 22, z: 3, sway: '8.8s', delay: '-5.2s' },
+  { left: '18%', size: 38, seed: 29, string: 56, z: 1, sway: '10s', delay: '-1.8s' },
 ] as const;
 
 const compactBalls = [
-  { hang: 'a', size: 56, seed: 5, string: 28 },
-  { hang: 'b', size: 36, seed: 9, string: 18 },
+  { left: '18%', size: 52, seed: 5, string: 22, z: 2, sway: '7.4s', delay: '0s' },
+  { left: '48%', size: 34, seed: 9, string: 12, z: 3, sway: '8.2s', delay: '-2.4s' },
+  { left: '78%', size: 44, seed: 13, string: 18, z: 2, sway: '9s', delay: '-4s' },
 ] as const;
 
 const balls = compact ? compactBalls : heroBalls;
@@ -19,7 +24,10 @@ const balls = compact ? compactBalls : heroBalls;
 <div class:list={['balls', compact && 'is-compact']} aria-hidden="true">
   {
     balls.map((ball) => (
-      <div class={`hang ${ball.hang}`}>
+      <div
+        class="hang"
+        style={`--x:${ball.left};--z:${ball.z};--sway:${ball.sway};--delay:${ball.delay}`}
+      >
         <div class="sway">
           <span class="str" style={`height:${ball.string}px`}></span>
           <canvas class="js-disco" data-size={ball.size} data-seed={ball.seed}></canvas>

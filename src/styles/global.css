@@ -306,12 +306,14 @@
 }
 
 .sparkle-star {
-  fill: #e8e4dc;
+  fill: #f6f1e6;
+  filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.45));
 }
 
 .sparkle-dot {
   border-radius: 50%;
-  background: #e8e4dc;
+  background: #f6f1e6;
+  box-shadow: 0 0 6px rgba(255, 255, 255, 0.35);
 }
 
 @keyframes twinkle {
@@ -329,8 +331,8 @@
 .balls {
   position: relative;
   width: 100%;
-  max-width: 440px;
-  height: 220px;
+  max-width: 520px;
+  height: 250px;
   margin-bottom: 4px;
 }
 
@@ -343,25 +345,22 @@
 .hang {
   position: absolute;
   top: 0;
+  left: var(--x, 50%);
+  z-index: var(--z, 1);
   display: flex;
   flex-direction: column;
   align-items: center;
+  transform: translateX(-50%);
 }
-
-.hang.a { left: 10%; }
-.hang.b { right: 12%; }
-.hang.c { left: 50%; transform: translateX(-50%); }
 
 .sway {
   display: flex;
   flex-direction: column;
   align-items: center;
   transform-origin: center top;
-  animation: sway 7s ease-in-out infinite;
+  animation: sway var(--sway, 7s) ease-in-out infinite;
+  animation-delay: var(--delay, 0s);
 }
-
-.hang.b .sway { animation-duration: 8.5s; animation-delay: -2s; }
-.hang.c .sway { animation-duration: 9.5s; animation-delay: -4s; }
 
 .str {
   width: 1px;
@@ -427,9 +426,7 @@
 }
 
 @media (max-width: 480px) {
-  .balls { height: 190px; }
-  .hang.a { left: 4%; }
-  .hang.b { right: 6%; }
+  .balls { height: 220px; }
   .dateline-day { font-size: 2.75rem; }
 }
 
