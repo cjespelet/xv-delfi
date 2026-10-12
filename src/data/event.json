@@ -53,15 +53,15 @@
   },
   "playlist": {
     "title": "¿Qué no puede faltar?",
-    "text": "Armemos juntos la playlist de la noche. Buscá un tema y pedilo acá mismo.",
+    "text": "Armemos juntos la playlist de la noche. Buscá un tema y agregalo acá mismo.",
     "search": "Buscá un tema o artista",
-    "ask": "Pedir",
-    "asking": "Pidiendo…",
-    "asked": "Pedido",
+    "ask": "Agregar",
+    "asking": "Agregando…",
+    "asked": "Agregado",
     "empty": "No encontramos ese tema.",
     "spotify": "Ver la playlist en Spotify",
     "url": "https://open.spotify.com/playlist/7mAqYuFZgAiAjncf9DR5QC",
-    "api": ""
+    "api": "https://xv-playlist.cjespelet.workers.dev/"
   },
   "rsvp": {
     "email": "cjespelet@gmail.com",

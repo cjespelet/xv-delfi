@@ -83,7 +83,7 @@ if (created.status === 422) {
 }
 
 try {
-  execSync(`robocopy "${SRC}" "${dest}" /E /XD .git node_modules dist .astro .wrangler cliente /XF .env .env.production /NFL /NDL /NJH /NJS /NP`, {
+  execSync(`robocopy "${SRC}" "${dest}" /E /XD .git node_modules dist .astro .wrangler cliente /XF .env .env.production .dev.vars /NFL /NDL /NJH /NJS /NP`, {
     stdio: 'ignore',
   });
 } catch (err) {

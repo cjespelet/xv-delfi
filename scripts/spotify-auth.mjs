@@ -1,5 +1,8 @@
 import http from 'node:http';
 import { exec } from 'node:child_process';
+import { writeFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { createInterface } from 'node:readline/promises';
 import { stdin as input, stdout as output } from 'node:process';
 
@@ -20,10 +23,14 @@ function ask(rl, label) {
   return rl.question(`${label}: `).then((v) => v.trim());
 }
 
-const rl = createInterface({ input, output });
-const clientId = await ask(rl, 'Spotify Client ID');
-const clientSecret = await ask(rl, 'Spotify Client Secret');
-rl.close();
+let clientId = process.env.SPOTIFY_CLIENT_ID?.trim() ?? '';
+let clientSecret = process.env.SPOTIFY_CLIENT_SECRET?.trim() ?? '';
+if (!clientId || !clientSecret) {
+  const rl = createInterface({ input, output });
+  if (!clientId) clientId = await ask(rl, 'Spotify Client ID');
+  if (!clientSecret) clientSecret = await ask(rl, 'Spotify Client Secret');
+  rl.close();
+}
 
 if (!clientId || !clientSecret) {
   console.error('Need both Client ID and Client Secret.');
@@ -90,13 +97,15 @@ const token = await new Promise((resolve, reject) => {
   });
 });
 
-console.log('\nRefresh token (keep private):\n');
-console.log(token);
-console.log('\nNext:');
-console.log('  cd xv-lp/spotify-api');
-console.log('  npx wrangler login');
-console.log('  npx wrangler secret put SPOTIFY_CLIENT_ID');
-console.log('  npx wrangler secret put SPOTIFY_CLIENT_SECRET');
-console.log('  npx wrangler secret put SPOTIFY_REFRESH_TOKEN');
-console.log('  # set SPOTIFY_PLAYLIST_ID in wrangler.toml');
-console.log('  npx wrangler deploy');
+const dest = join(dirname(fileURLToPath(import.meta.url)), '..', 'spotify-api', '.dev.vars');
+writeFileSync(
+  dest,
+  [
+    `SPOTIFY_CLIENT_ID=${clientId}`,
+    `SPOTIFY_CLIENT_SECRET=${clientSecret}`,
+    `SPOTIFY_REFRESH_TOKEN=${token}`,
+    '',
+  ].join('\n'),
+  { encoding: 'utf8' },
+);
+console.log('AUTH_OK');

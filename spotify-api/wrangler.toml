@@ -1,8 +1,9 @@
 name = "xv-playlist"
 main = "worker.js"
 compatibility_date = "2026-10-11"
+workers_dev = true
 
 [vars]
 # Playlist ID from https://open.spotify.com/playlist/THIS_PART
 SPOTIFY_PLAYLIST_ID = "7mAqYuFZgAiAjncf9DR5QC"
-ALLOWED_ORIGINS = "https://cjespelet.github.io,http://localhost:4322,http://localhost:4323"
+ALLOWED_ORIGINS = "https://cjespelet.github.io,http://localhost:4321,http://localhost:4322,http://localhost:4323"
