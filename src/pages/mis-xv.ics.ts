@@ -6,7 +6,7 @@ export const GET: APIRoute = () => {
   const body = buildIcs(
     `XV de ${event.honoree}`,
     event.eventDate,
-    event.party.address,
+    `${event.party.venue}, ${event.party.address}`,
     event.site.description,
   );
   return new Response(body, {

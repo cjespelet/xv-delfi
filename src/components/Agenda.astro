@@ -5,7 +5,8 @@ import { googleCalendarUrl } from '../utils/format';
 interface Props { data: EventData; }
 const { data } = Astro.props;
 const title = `XV de ${data.honoree}`;
-const google = googleCalendarUrl(title, data.eventDate, data.party.address, data.site.description);
+const location = `${data.party.venue}, ${data.party.address}`;
+const google = googleCalendarUrl(title, data.eventDate, location, data.site.description);
 const apple = `${import.meta.env.BASE_URL}mis-xv.ics`;
 ---
 

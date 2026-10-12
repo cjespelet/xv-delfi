@@ -13,7 +13,10 @@ const diet = data.rsvp;
   <DiscoBalls compact />
   <p class="eyebrow relative z-10">Confirmá</p>
   <h2 id="rsvp-title" class="script-title relative z-10 mt-4">{data.rsvp.title}</h2>
-  <p class="relative z-10 mt-3 text-sm text-silver">{data.rsvp.subtitle}</p>
+  <p class="relative z-10 mt-3 text-sm text-silver">
+    {data.rsvp.subtitle.replace(/(\d{1,2} de \w+)\.?$/, '')}
+    <strong class="font-medium text-white">{data.rsvp.subtitle.match(/(\d{1,2} de \w+)/)?.[1]}</strong>.
+  </p>
   <div class="silver-line"></div>
 
   <form
