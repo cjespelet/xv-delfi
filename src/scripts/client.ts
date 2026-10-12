@@ -42,7 +42,7 @@ function rsvpWhatsAppText(
     lines.push('Alimentación:');
     lines.push(formatAlimentacion(name, guests));
   }
-  lines.push(`Frase: ${phrase || '(sin frase)'}`);
+  if (phrase) lines.push(`Frase: ${phrase}`);
   return lines.join('\n');
 }
 
