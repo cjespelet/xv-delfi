@@ -306,14 +306,12 @@
 }
 
 .sparkle-star {
-  fill: #f6f1e6;
-  filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.45));
+  fill: #e8e4dc;
 }
 
 .sparkle-dot {
   border-radius: 50%;
-  background: #f6f1e6;
-  box-shadow: 0 0 6px rgba(255, 255, 255, 0.35);
+  background: #e8e4dc;
 }
 
 @keyframes twinkle {
@@ -332,7 +330,7 @@
   position: relative;
   width: 100%;
   max-width: 520px;
-  height: 250px;
+  height: 270px;
   margin-bottom: 4px;
 }
 
